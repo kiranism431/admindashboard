@@ -1,25 +1,58 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import ProfileList from './components/ProfileList';
+import Map from './components/Map';
+import ProfileDetails from './components/ProfileDetails';
+import AdminPanel from './components/AdminPanel';
+import LoadingIndicator from './components/LoadingIndicator';
+import { getProfiles } from './services/ProfileService';
 
-function App() {
+const App = () => {
+  const [profiles, setProfiles] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      try {
+        const data = await getProfiles();
+        setProfiles(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching profiles:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfiles();
+  }, []);
+
+  const handleSummaryClick = (profile) => {
+    setSelectedProfile(profile);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <h1>Profiles</h1>
+      {isLoading ? (
+        <LoadingIndicator />
+      ) : (
+        <>
+          <ProfileList profiles={profiles} onSummaryClick={handleSummaryClick} />
+          <div className="profile-details-container">
+            {selectedProfile ? (
+              <>
+                <ProfileDetails profile={selectedProfile} />
+                <Map address={selectedProfile.address} />
+              </>
+            ) : (
+              <div className="no-profile-selected">No profile selected</div>
+            )}
+          </div>
+          <AdminPanel />
+        </>
+      )}
     </div>
   );
-}
+};
 
 export default App;
